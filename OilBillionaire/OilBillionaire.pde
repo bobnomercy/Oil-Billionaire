@@ -1,4 +1,5 @@
 import interfascia.*;
+import java.util.ArrayList;
 
 final int stateButtonWidth = 60;
 final int stateButtonHeight = 40;
@@ -232,6 +233,33 @@ void setup() {
   resetTilePurchases();
 }
 
+ArrayList notifications = new ArrayList();
+void postNotification(String notification, int x, int y, int size){
+  notifications.add(notification);
+  notifications.add(x);
+  notifications.add(y);
+  notifications.add(size);
+  notifications.add(millis());
+}
+
+void manageNotifications(){
+  final int dur = 500;
+  for (int n = 0; n < notifications.size()-4; n+=5){
+    if (millis() - int(notifications.get(n+4).toString()) < dur){
+      textSize(int(notifications.get(n+3).toString()));
+      fill(255, 0, 0, (1-((millis() - float(notifications.get(n+4).toString())) / dur)) * 255);
+      text(notifications.get(n).toString(), int(notifications.get(n+1).toString()), int(notifications.get(n+2).toString()));
+    }
+    else{
+      notifications.remove(n);
+      notifications.remove(n);
+      notifications.remove(n);
+      notifications.remove(n);
+      notifications.remove(n);
+    }
+  }
+}
+
 void resetTilePurchases(){
   for (int i = 0; i < yGridSquares; i++){
     for (int j = 0; j < xGridSquares; j++){
@@ -304,6 +332,7 @@ void draw() {
     textSize(32);
     text("In " + commafy(finshSeconds) + " Seconds", 20, 450);
   }
+  manageNotifications();
 }
 int[] fuelProductionRates = new int[60];
 int[] oilProductionRates = new int[60];
@@ -342,6 +371,7 @@ void addOil(){
       }
     }
   }
+  int pmoney = money;
   durMillis += millis()-lastMillis;
   if (durMillis > 1000){
     durMillis = 0;
@@ -360,6 +390,8 @@ void addOil(){
       }
     }
   }
+  if(int(money-pmoney)>0)
+    postNotification("+"+(money-pmoney), width/2, 2, 10);
   for (int point = 0; point < (60) - 1; point++) {
     oilProductionRates[point] = oilProductionRates[point + 1];
     fuelProductionRates[point] = fuelProductionRates[point + 1];
@@ -730,6 +762,9 @@ void attemptPumpPurchase(String purchase){
             transGrid[xSquareSelectedTrans] = "f";
           break;
       }
+    }
+    else{
+      postNotification("insufficient funds", width/2, 100, 15);
     }
   }
 }
