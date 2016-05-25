@@ -69,7 +69,7 @@ int fuelShipBoostLevel = 1;
 int oilShipBoostLevel = 1;
 
 int finshSeconds = -1;
-IFButton fuelShipBoost, oilShipBoost;
+IFButton fuelShipBoost, oilShipBoost, sellButton;
 
 void setup() {
   size(640, 480);
@@ -83,6 +83,10 @@ void setup() {
   
   fuelShipBoost = new IFButton("Fuel Ship Boost - $300,000", 20, 70, 200);
   oilShipBoost = new IFButton("Oil Ship Boost - $250,000", 240, 70, 200);
+  
+  sellButton = new IFButton("Sell", 20, 100, 50);
+  sellButton.addActionListener(this);
+  c.add(sellButton);
   
   fuelShipBoost.addActionListener(this);
   oilShipBoost.addActionListener(this);
@@ -223,6 +227,8 @@ void setup() {
   c.add(transport);
   c.add(refinery);
   
+  hideSellButton();
+  
   resetTilePurchases();
 }
 
@@ -289,6 +295,7 @@ void draw() {
   total=0;
   for(int i = 0; i < 60; i++)total+=oilProductionRates[i];
   text(commafy(total/60) + " l/s", 215, 33);
+  maxOutStorage();
   
   if (money >= 1000000000){
     if (finshSeconds < 0)
@@ -572,20 +579,30 @@ void drawAnimatedSpritesTrans(){
   }
 }
 
+void showSellButton(){
+  sellButton.setX(20);
+}
+void hideSellButton(){
+  sellButton.setX(1000);
+}
+
 void purchaseMenuTrans(){
   if (transMenuActive){
     if (transGrid[xSquareSelectedTrans] != "g"){
       showPurchaseMenuTrans();
       hidePurchaseTile();
+      showSellButton();
     }
     else{
       showPurchaseTile();
+      hideSellButton();
     }
     shadeSelectedTrans();
   }
   else{
     hidePurchaseTile();
     hidePurchaseMenuTrans();
+    hideSellButton();
   }
   shadePurchasedTrans();
 }
@@ -595,15 +612,18 @@ void purchaseMenu(){
     if(pumpGrid[ySquareSelected][xSquareSelected] != "g"){
       showPurchaseMenu();
       hidePurchaseTile();
+      showSellButton();
     }
     else{
       showPurchaseTile();
+      hideSellButton();
     }
     shadeSelected();
   }
   else{
     hidePurchaseTile();
     hidePurchaseMenu();
+    hideSellButton();
   }
   shadePurchased();
 }
@@ -612,15 +632,18 @@ void purchaseMenuRef(){
     if(refGrid[ySquareSelectedRef][xSquareSelectedRef] != "g"){
       showPurchaseMenuRef();
       hidePurchaseTile();
+      showSellButton();
     }
     else{
       showPurchaseTile();
+      hideSellButton();
     }
     shadeSelectedRef();
   }
   else{
     hidePurchaseTile();
     hidePurchaseMenuRef();
+    hideSellButton();
   }
   shadePurchasedRef();
 }
@@ -711,6 +734,15 @@ void attemptPumpPurchase(String purchase){
   }
 }
 
+void maxOutStorage(){
+  if (oilStored > maxStorage){
+    oilStored = maxStorage;
+  }
+  if (fuelStored > maxFuelStorage){
+    fuelStored = maxFuelStorage;
+  }
+}
+
 void actionPerformed (GUIEvent e){
   if (e.getSource() == pump){
      state = "pump";
@@ -774,6 +806,45 @@ void actionPerformed (GUIEvent e){
       oilShipBoostLevel += 1;
       oilShipBoostCost = oilShipBoostLevel*250000;
       oilShipBoost.setLabel("Oil Ship Boost - $"+commafy(oilShipBoostCost));
+    }
+  }
+  else if (e.getSource() == sellButton){
+    if(state == "pump"){
+      if(pumpGrid[ySquareSelected][xSquareSelected] != "g"){
+        if (pumpGrid[ySquareSelected][xSquareSelected] == "f"){
+          money += int(pumpCosts.get("Tile").toString());
+          pumpGrid[ySquareSelected][xSquareSelected] = "g";
+          hidePurchaseMenu();
+        }
+        else{
+          money += int(pumpCosts.get(gridSymbols.get(pumpGrid[ySquareSelected][xSquareSelected])).toString());
+          pumpGrid[ySquareSelected][xSquareSelected] = "f";
+        }
+      }
+    }
+    else if(state == "refinery"){
+      if(refGrid[ySquareSelectedRef][xSquareSelectedRef] != "g"){
+        if (refGrid[ySquareSelectedRef][xSquareSelectedRef] == "f"){
+          money += int(pumpCosts.get("Tile").toString());
+          refGrid[ySquareSelectedRef][xSquareSelectedRef] = "g";
+          hidePurchaseMenuRef();
+        }
+        else{
+          money += int(pumpCosts.get(refGrid[ySquareSelectedRef][xSquareSelectedRef]).toString());
+          refGrid[ySquareSelectedRef][xSquareSelectedRef] = "g";
+        }
+      }
+    }
+    else if(state == "transport"){
+      if(transGrid[xSquareSelectedTrans] != "g"){
+        if(transGrid[xSquareSelectedTrans] == "f"){
+          money += int(pumpCosts.get("Tile").toString());
+          transGrid[xSquareSelectedTrans] = "g";
+          hidePurchaseMenuTrans();
+        }
+        money += int(pumpCosts.get(transGrid[xSquareSelected]).toString());
+        transGrid[xSquareSelectedTrans] = "g";
+      }
     }
   }
 }
