@@ -45,7 +45,7 @@ HashMap containerStorages = new HashMap();
 IFButton purchaseTile;
 
 //default cash
-int money = 100000;
+int money = 100000000;
 
 //Oil storage
 int maxStorage = 0;
@@ -68,9 +68,13 @@ int fuelShipBoostCost = 300000;
 int oilShipBoostCost = 250000;
 int fuelShipBoostLevel = 1;
 int oilShipBoostLevel = 1;
+int pumpBoostCost = 10000000;
+int refBoostCost = 10000000;
+int pumpBoostLevel = 1;
+int refBoostLevel = 1;
 
 int finshSeconds = -1;
-IFButton fuelShipBoost, oilShipBoost, sellButton;
+IFButton fuelShipBoost, oilShipBoost, sellButton, pumpBoost, refBoost;
 
 void setup() {
   size(640, 480);
@@ -82,8 +86,10 @@ void setup() {
   c.add(oilStorageStatus);
   c.add(fuelStorageStatus);
   
-  fuelShipBoost = new IFButton("Fuel Ship Boost - $300,000", 20, 70, 200);
-  oilShipBoost = new IFButton("Oil Ship Boost - $250,000", 240, 70, 200);
+  fuelShipBoost = new IFButton("Fuel Boost - $"+commafy(fuelShipBoostCost)+ " x" + fuelShipBoostLevel, 20, 70, 200);
+  oilShipBoost = new IFButton("Oil Ship - $"+commafy(oilShipBoostCost)+ " x" + oilShipBoostLevel, 20, 70, 200);
+  refBoost = new IFButton("Refinery Boost - $"+commafy(refBoostCost)+ " x" + refBoostLevel, 20, 70, 200);
+  pumpBoost = new IFButton("Pump Boost - $"+commafy(pumpBoostCost)+ " x" + pumpBoostLevel, 20, 70, 200);
   
   sellButton = new IFButton("Sell", 20, 100, 50);
   sellButton.addActionListener(this);
@@ -91,9 +97,13 @@ void setup() {
   
   fuelShipBoost.addActionListener(this);
   oilShipBoost.addActionListener(this);
+  pumpBoost.addActionListener(this);
+  refBoost.addActionListener(this);
   
   c.add(fuelShipBoost);
   c.add(oilShipBoost);
+  c.add(pumpBoost);
+  c.add(refBoost);
   
   pump = new IFButton("Pump", 20, 20, stateButtonWidth, stateButtonHeight);
   transport = new IFButton("Transport", 20 + stateButtonWidth*2 + stateButtonGap*2, 20, stateButtonWidth, stateButtonHeight);
@@ -285,6 +295,8 @@ void draw() {
       hidePurchaseMenuRef();
       hidePurchaseMenuTrans();
       hideOilShipBoostTile();
+      hideRefBoost();
+      showPumpBoost();
       break;
     case "transport":
       image(transBackground, 0, 0);
@@ -294,6 +306,8 @@ void draw() {
       hidePurchaseMenuRef();
       drawAnimatedSpritesTrans();
       showOilShipBoostTile();
+      hideRefBoost();
+      hidePumpBoost();
       break;
     case "refinery":
       image(refBackground, 0, 0);
@@ -303,6 +317,8 @@ void draw() {
       hidePurchaseMenu();
       drawAnimatedSpritesRef();
       hideOilShipBoostTile();
+      showRefBoost();
+      hidePumpBoost();
       break;
   }
   textSize(32);
@@ -353,9 +369,9 @@ void addOil(){
     for (int j = 0; j < xGridSquares; j++){
       if(pumpOutputs.get(refGrid[i][j]) != null){
         if (oilStored - float(pumpOutputs.get(refGrid[i][j]).toString()) >= 0 && float(pumpOutputs.get(refGrid[i][j]).toString()) * (millis() - lastMillis) /1000 + fuelStored <= maxFuelStorage ){
-            fuelStored +=  float(pumpOutputs.get(refGrid[i][j]).toString()) * (millis() - lastMillis)/1000;
-            oilStored -=  float(pumpOutputs.get(refGrid[i][j]).toString()) * (millis() - lastMillis)/1000;
-            fuelProductionRate+=float(pumpOutputs.get(refGrid[i][j]).toString());
+            fuelStored +=  float(pumpOutputs.get(refGrid[i][j]).toString()) * (millis() - lastMillis)/1000 * refBoostLevel;
+            oilStored -=  float(pumpOutputs.get(refGrid[i][j]).toString()) * (millis() - lastMillis)/1000 * refBoostLevel;
+            fuelProductionRate+=float(pumpOutputs.get(refGrid[i][j]).toString()) * refBoostLevel;
           }
         else if (state == "refinery"){
           fill(255, 50, 50, 100);
@@ -366,8 +382,8 @@ void addOil(){
       }
       if(pumpOutputs.get(pumpGrid[i][j]) != null){
         if (float(pumpOutputs.get(pumpGrid[i][j]).toString()) * (millis() - lastMillis) / 1000 + oilStored <= maxStorage){
-          oilStored +=  float(pumpOutputs.get(pumpGrid[i][j]).toString()) * (millis() - lastMillis) / 1000;
-          oilProductionRate += float(pumpOutputs.get(pumpGrid[i][j]).toString());
+          oilStored +=  float(pumpOutputs.get(pumpGrid[i][j]).toString()) * (millis() - lastMillis) / 1000 * pumpBoostLevel;
+          oilProductionRate += float(pumpOutputs.get(pumpGrid[i][j]).toString()) * pumpBoostLevel;
         }
         else if (state == "pump"){
           fill(255, 50, 50, 100);
@@ -540,6 +556,18 @@ void shadeSelected(){
 void shadeSelectedRef(){
   fill(123, 123, 123, 100);
   rect(xSquareSelectedRef * gridSquareW, ySquareSelectedRef * gridSquareH + topLine, gridSquareW, gridSquareH);
+}
+void hidePumpBoost(){
+  pumpBoost.setX(1000);
+}
+void showPumpBoost(){
+  pumpBoost.setX(20);
+}
+void hideRefBoost(){
+  refBoost.setX(1000);
+}
+void showRefBoost(){
+  refBoost.setX(20);
 }
 void shadePurchased(){
   fill(200, 200, 200, 200);
@@ -845,16 +873,35 @@ void actionPerformed (GUIEvent e){
       money -= fuelShipBoostCost;
       fuelShipBoostLevel += 1;
       fuelShipBoostCost = fuelShipBoostLevel*250000;
-      fuelShipBoost.setLabel("Fuel Ship Boost - $"+commafy(fuelShipBoostCost));
+      fuelShipBoost.setLabel("Fuel Ship Boost - $"+commafy(fuelShipBoostCost)+ " x" + fuelShipBoostLevel);
     }
+    else postNotification("insufficient funds", width/2, 100, 15);
   }
   else if (e.getSource() == oilShipBoost){
     if (money - oilShipBoostCost >= 0){
       money -= oilShipBoostCost;
       oilShipBoostLevel += 1;
       oilShipBoostCost = oilShipBoostLevel*250000;
-      oilShipBoost.setLabel("Oil Ship Boost - $"+commafy(oilShipBoostCost));
+      oilShipBoost.setLabel("Oil Ship Boost - $"+commafy(oilShipBoostCost)+ " x" + oilShipBoostLevel);
     }
+    else postNotification("insufficient funds", width/2, 100, 15);
+  }else if (e.getSource() == pumpBoost){
+    if (money - pumpBoostCost >= 0){
+      money -= pumpBoostCost;
+      pumpBoostLevel += 1;
+      pumpBoostCost = pumpBoostLevel*10000000;
+      pumpBoost.setLabel("Pump Boost - $"+commafy(pumpBoostCost)+ " x" + pumpBoostLevel);
+    }
+    else postNotification("insufficient funds", width/2, 100, 15);
+  }
+  else if (e.getSource() == refBoost){
+    if (money - refBoostCost >= 0){
+      money -= refBoostCost;
+      refBoostLevel += 1;
+      refBoostCost = pumpBoostLevel*10000000;
+      refBoost.setLabel("Refinery Boost - $"+commafy(refBoostCost)+ " x" + refBoostLevel);
+    }
+    else postNotification("insufficient funds", width/2, 100, 15);
   }
   else if (e.getSource() == sellButton){
     if(state == "pump"){
@@ -878,8 +925,8 @@ void actionPerformed (GUIEvent e){
           hidePurchaseMenuRef();
         }
         else{
-          money += int(pumpCosts.get(refGrid[ySquareSelectedRef][xSquareSelectedRef]).toString());
-          refGrid[ySquareSelectedRef][xSquareSelectedRef] = "g";
+          money += int(pumpCosts.get(gridSymbols.get(refGrid[ySquareSelectedRef][xSquareSelectedRef])).toString());
+          refGrid[ySquareSelectedRef][xSquareSelectedRef] = "f";
         }
       }
     }
@@ -890,8 +937,8 @@ void actionPerformed (GUIEvent e){
           transGrid[xSquareSelectedTrans] = "g";
           hidePurchaseMenuTrans();
         }
-        money += int(pumpCosts.get(transGrid[xSquareSelected]).toString());
-        transGrid[xSquareSelectedTrans] = "g";
+        money += int(pumpCosts.get(gridSymbols.get(transGrid[xSquareSelectedTrans])).toString());
+        transGrid[xSquareSelectedTrans] = "f";
       }
     }
   }
