@@ -145,7 +145,7 @@ void setup() {
   pumpCosts.put("Outrageous Level Rig", 20000000);
   pumpCosts.put("Tile", 5000);
   pumpCosts.put("Small Container", 7500);
-  pumpCosts.put("Large Container", 15000);
+  pumpCosts.put("Large Container", 200000);
   pumpCosts.put("Low Level Refinery", 100000);
   pumpCosts.put("High Level Refinery", 30000000);
   pumpCosts.put("Fuel Container", 80000);
@@ -165,7 +165,7 @@ void setup() {
   pumpOutputs.put("n", 6000);
   
   containerStorages.put("h", 25000);
-  containerStorages.put("i", 40000);
+  containerStorages.put("i", 80000);
   containerStorages.put("j", 60000);
   
   purchaseTile = new IFButton ("Purchase Tile - $" + commafy(int(pumpCosts.get("Tile").toString())), topButtonY, menuButtonX, menuButtonW);
