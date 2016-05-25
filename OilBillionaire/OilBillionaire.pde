@@ -323,6 +323,12 @@ void draw() {
   total=0;
   for(int i = 0; i < 60; i++)total+=oilProductionRates[i];
   text(commafy(total/60) + " l/s", 215, 33);
+  total=0;
+  for(int i = 0; i<1200; i++)total += incomeRates[i];
+  text("$"+commafy(total/20)+"/s", 280, 10);
+  if(total > 0) text("estimated time remaining:" + commafy((1000000000-money)/(total/20)) + "s", 400, 10);
+  else text("estimated time remaining:inf", 400, 10);
+  
   maxOutStorage();
   
   if (money >= 1000000000){
@@ -335,6 +341,7 @@ void draw() {
   manageNotifications();
 }
 int[] fuelProductionRates = new int[60];
+int[] incomeRates = new int[1200];
 int[] oilProductionRates = new int[60];
 int startingMillis = millis();
 int lastMillis = millis();
@@ -371,6 +378,7 @@ void addOil(){
       }
     }
   }
+  int incomeRate = 0;
   int pmoney = money;
   durMillis += millis()-lastMillis;
   if (durMillis > 1000){
@@ -380,24 +388,29 @@ void addOil(){
         if (transGrid[i] == "m"){
           oilStored -= int(pumpOutputs.get("m").toString()) * oilShipBoostLevel;
           money += oilPrice*int(pumpOutputs.get("m").toString()) * oilShipBoostLevel;
+          incomeRate += oilPrice*int(pumpOutputs.get("m").toString()) * oilShipBoostLevel;
         }
       }
       if (fuelStored - int(pumpOutputs.get("n").toString()) * fuelShipBoostLevel >= 0){
         if (transGrid[i] == "n"){
           fuelStored -= int(pumpOutputs.get("n").toString()) * fuelShipBoostLevel;
           money += fuelPrice*int(pumpOutputs.get("n").toString()) * fuelShipBoostLevel;
+          incomeRate += fuelPrice*int(pumpOutputs.get("n").toString()) * fuelShipBoostLevel;
         }
       }
     }
   }
-  if(int(money-pmoney)>0)
-    postNotification("+"+(money-pmoney), width/2, 2, 10);
   for (int point = 0; point < (60) - 1; point++) {
     oilProductionRates[point] = oilProductionRates[point + 1];
     fuelProductionRates[point] = fuelProductionRates[point + 1];
   }
   oilProductionRates[(60) - 1] = oilProductionRate;
   fuelProductionRates[(60) - 1] = fuelProductionRate;
+  
+  for (int point = 0; point < (1200) - 1; point++) {
+    incomeRates[point] = incomeRates[point + 1];
+  }
+  incomeRates[(1200) - 1] = incomeRate;
   
   lastMillis = millis();
 }
