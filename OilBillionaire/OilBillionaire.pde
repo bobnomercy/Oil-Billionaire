@@ -45,7 +45,7 @@ HashMap containerStorages = new HashMap();
 IFButton purchaseTile;
 
 //default cash
-int money = 100000000;
+int money = 100000;
 
 //Oil storage
 int maxStorage = 0;
@@ -334,16 +334,23 @@ void draw() {
   text("Fuel", 280, 52);
   text("Oil", 285, 33);
   int total=0;
+  int s = 0;
   for(int i = 0; i < 60; i++)total+=fuelProductionRates[i];
   text(commafy(total/60) + " l/s", 215, 52);
+  s+=total*fuelPrice/60;
   total=0;
   for(int i = 0; i < 60; i++)total+=oilProductionRates[i];
   text(commafy(total/60) + " l/s", 215, 33);
+  s+=total*oilPrice/60;
   total=0;
   for(int i = 0; i<1200; i++)total += incomeRates[i];
   text("$"+commafy(total/20)+"/s", 280, 10);
   if(total > 0) text("estimated time remaining:" + commafy((1000000000-money)/(total/20)) + "s", 400, 10);
   else text("estimated time remaining:inf", 400, 10);
+  if (s != 0) {
+    text(int((float)(total/20)/s*100)+"%", 150, 10);
+  }
+  else text("0%", 150, 10);
   
   maxOutStorage();
   
